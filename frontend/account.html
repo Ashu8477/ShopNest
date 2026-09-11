@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>ShopNest - Account</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      main {
+        max-width: 760px;
+        margin: 35px auto;
+        padding: 0 20px;
+      }
+      .head {
+        margin-bottom: 18px;
+      }
+      .head h2 {
+        font-size: 26px;
+      }
+      .head p {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 6px;
+      }
+      .profile {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 13px;
+        padding: 22px;
+      }
+      .avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #172554;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 13px 0;
+        border-bottom: 1px solid #eef2f7;
+        font-size: 14px;
+      }
+      .row:last-child {
+        border-bottom: 0;
+      }
+      .label {
+        color: #64748b;
+      }
+      .value {
+        font-weight: bold;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+      }
+      .stat small {
+        color: #64748b;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .stat strong {
+        font-size: 20px;
+      }
+      .actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .actions a,
+      .actions button {
+        padding: 10px 14px;
+        border-radius: 7px;
+        text-decoration: none;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #172033;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .actions a.primary {
+        background: #172554;
+        color: #fff;
+        border-color: #172554;
+      }
+      @media (max-width: 600px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .row {
+          gap: 15px;
+        }
+        .value {
+          text-align: right;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="head">
+        <h2>My Account</h2>
+        <p>Quick overview of your ShopNest account.</p>
+      </div>
+      <div class="profile">
+        <div id="avatar" class="avatar">U</div>
+        <div class="row">
+          <span class="label">Username</span
+          ><span id="username" class="value">-</span>
+        </div>
+        <div class="row">
+          <span class="label">Role</span><span id="role" class="value">-</span>
+        </div>
+        <div class="row">
+          <span class="label">User ID</span
+          ><span id="userid" class="value">-</span>
+        </div>
+        <div class="actions">
+          <a class="primary" href="index.html">Back to Home</a
+          ><a href="view_product.html">Browse Products</a
+          ><a id="ordersLink" href="my_orders.html">My Orders</a>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <small>Total Orders</small><strong id="orders">0</strong>
+        </div>
+        <div class="stat">
+          <small>Active Orders</small><strong id="active">0</strong>
+        </div>
+        <div class="stat">
+          <small>Total Spent</small><strong id="spent">₹0</strong>
+        </div>
+        <div class="stat">
+          <small>Wishlist</small><strong id="wishlist">0</strong>
+        </div>
+        <div class="stat">
+          <small>Cart Items</small><strong id="cart">0</strong>
+        </div>
+      </div>
+    </main>
+    <script src="navbar.js"></script>
+    <script>
+      const { token, username, role } = window.shopNestAuth || {};
+      if (!token) location.href = 'login.html';
+      document.getElementById('username').textContent = username || '-';
+      document.getElementById('role').textContent = role || '-';
+      document.getElementById('userid').textContent =
+        localStorage.getItem('userid') || '-';
+      document.getElementById('avatar').textContent = (username || 'U')
+        .charAt(0)
+        .toUpperCase();
+      try {
+        document.getElementById('wishlist').textContent = JSON.parse(
+          localStorage.getItem('shopNestWishlist') || '[]'
+        ).length;
+      } catch (e) {}
+      async function load() {
+        if (role !== 'customer') return;
+        try {
+          const r = await fetch(
+              `http://localhost:3000/order/view?username=${encodeURIComponent(username)}`
+            ),
+            d = await r.json();
+          const ids = [...new Set((d.data || []).map((x) => x.oid))];
+          document.getElementById('orders').textContent = ids.length;
+          document.getElementById('active').textContent =
+            ids.length -
+            (d.data || []).filter(
+              (x) => x.status === 'Delivered' || x.status === 'Cancelled'
+            ).length;
+          document.getElementById('spent').textContent =
+            '₹' +
+            Object.values(
+              (d.data || []).reduce((m, x) => {
+                m[x.oid] = Number(x.total) || 0;
+                return m;
+              }, {})
+            )
+              .reduce((a, b) => a + b, 0)
+              .toFixed(0);
+        } catch (e) {}
+        try {
+          const r = await fetch(
+              `http://localhost:3000/cart/view?username=${encodeURIComponent(username)}`
+            ),
+            d = await r.json();
+          document.getElementById('cart').textContent = (d.data || []).reduce(
+            (n, x) => n + Number(x.quantity || 0),
+            0
+          );
+        } catch (e) {}
+      }
+      if (role === 'vendor') {
+        document.getElementById('ordersLink').href = 'vendor_orders.html';
+        document.getElementById('ordersLink').textContent = 'Customer Orders';
+      }
+      load();
+    </script>
+  </body>
+</html>

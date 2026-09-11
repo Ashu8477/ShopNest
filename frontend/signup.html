@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopNest - Create Account</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .signup-box {
+        width: 380px;
+        background: white;
+        padding: 32px;
+        border: 1px solid #ddd;
+        border-radius: 14px;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+      }
+
+      .heading {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+
+      .heading h1 {
+        font-size: 25px;
+        color: #222;
+        margin-bottom: 6px;
+      }
+
+      .heading p {
+        color: #777;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 17px;
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 7px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        outline: none;
+        background: white;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: #555;
+      }
+
+      .signup-btn {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 5px;
+        background: #172554;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+      }
+
+      .signup-btn:hover {
+        background: #243b78;
+      }
+
+      .message {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .login-link {
+        margin-top: 22px;
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .login-link a {
+        color: #222;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="signup-box">
+      <div class="heading">
+        <h1>ShopNest</h1>
+        <p>Create your account</p>
+      </div>
+
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="Enter your username"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Create a password"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Account Type</label>
+          <select id="role" required>
+            <option value="">Select account type</option>
+            <option value="customer">Customer</option>
+            <option value="vendor">Vendor</option>
+          </select>
+        </div>
+
+        <button type="submit" class="signup-btn">Create Account</button>
+
+        <div id="message" class="message"></div>
+      </form>
+
+      <div class="login-link">
+        Already have an account?
+        <a href="login.html">Login</a>
+      </div>
+    </div>
+    <script>
+      const signupForm = document.getElementById('signupForm');
+      const message = document.getElementById('message');
+
+      signupForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('role').value;
+
+        try {
+          const response = await fetch('http://localhost:3000/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: username,
+              password: password,
+              role: role,
+            }),
+          });
+
+          const result = await response.json().catch(() => null);
+
+          if (response.ok) {
+            message.textContent = 'Account created successfully';
+            message.style.color = 'green';
+
+            signupForm.reset();
+
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 1000);
+          } else {
+            message.textContent = result?.message || 'Unable to create account';
+            message.style.color = 'red';
+          }
+        } catch (error) {
+          message.textContent = 'Unable to connect to server';
+          message.style.color = 'red';
+        }
+      });
+    </script>
+  </body>
+</html>

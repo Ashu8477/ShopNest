@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>ShopNest - My Orders</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      main {
+        max-width: 950px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+      h2 {
+        font-size: 25px;
+      }
+      .sub {
+        color: #64748b;
+        font-size: 13px;
+        margin: 5px 0 18px;
+      }
+      .tools {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .tools input,
+      .tools select {
+        padding: 10px 12px;
+        border: 1px solid #dbe3ee;
+        border-radius: 7px;
+        background: #fff;
+        font-size: 14px;
+      }
+      .tools input {
+        flex: 1;
+      }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .stat small {
+        display: block;
+        color: #64748b;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      .stat strong {
+        font-size: 20px;
+      }
+      .order {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 19px;
+        margin-bottom: 15px;
+      }
+      .order-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .order-id {
+        font-weight: bold;
+        font-size: 17px;
+      }
+      .status {
+        padding: 6px 10px;
+        border-radius: 20px;
+        background: #ecfdf5;
+        color: #047857;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .status.cancelled {
+        background: #fef2f2;
+        color: #b91c1c;
+      }
+      .progress {
+        display: flex;
+        gap: 6px;
+        margin: 12px 0;
+      }
+      .step {
+        height: 5px;
+        flex: 1;
+        background: #e2e8f0;
+        border-radius: 5px;
+      }
+      .step.on {
+        background: #f59e0b;
+      }
+      .track {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 12px;
+      }
+      .products {
+        border-top: 1px solid #eef2f7;
+        border-bottom: 1px solid #eef2f7;
+        padding: 11px 0;
+        margin-bottom: 14px;
+      }
+      .product {
+        display: flex;
+        justify-content: space-between;
+        padding: 7px 0;
+        font-size: 14px;
+        color: #475569;
+      }
+      .order-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #64748b;
+        font-size: 13px;
+      }
+      .total {
+        font-weight: bold;
+        color: #172033;
+      }
+      .cancel {
+        border: 1px solid #fecaca;
+        background: #fff;
+        color: #b91c1c;
+        border-radius: 6px;
+        padding: 7px 11px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .empty {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 45px;
+        text-align: center;
+        color: #64748b;
+      }
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        background: #172033;
+        color: #fff;
+        padding: 11px 15px;
+        border-radius: 7px;
+        display: none;
+        font-size: 13px;
+      }
+      @media (max-width: 650px) {
+        .tools {
+          flex-direction: column;
+        }
+        .summary {
+          grid-template-columns: 1fr;
+        }
+        .order-top,
+        .order-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 9px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h2>My Orders</h2>
+      <div class="sub">
+        Track purchases, check progress, and manage recent orders.
+      </div>
+      <div class="summary">
+        <div class="stat">
+          <small>Total Orders</small><strong id="totalOrders">0</strong>
+        </div>
+        <div class="stat">
+          <small>Active Orders</small><strong id="activeOrders">0</strong>
+        </div>
+        <div class="stat">
+          <small>Delivered</small><strong id="deliveredOrders">0</strong>
+        </div>
+      </div>
+      <div class="tools">
+        <input id="search" placeholder="Search by order or product..." /><select
+          id="filter"
+        >
+          <option value="all">All statuses</option>
+          <option>Placed</option>
+          <option>Processing</option>
+          <option>Shipped</option>
+          <option>Delivered</option>
+          <option>Cancelled</option>
+        </select>
+      </div>
+      <div id="orders"></div>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script src="navbar.js"></script>
+    <script>
+      const { token, username, role } = window.shopNestAuth || {};
+      if (!token || role !== 'customer') location.href = 'login.html';
+      const ordersRef = document.getElementById('orders'),
+        searchRef = document.getElementById('search'),
+        filterRef = document.getElementById('filter');
+      let allOrders = [];
+      function toast(t) {
+        const x = document.getElementById('toast');
+        x.textContent = t;
+        x.style.display = 'block';
+        setTimeout(() => (x.style.display = 'none'), 1600);
+      }
+      function progress(status) {
+        if (status === 'Cancelled')
+          return '<div class="track">This order was cancelled.</div>';
+        const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'],
+          current = steps.indexOf(status);
+        return `<div class="track">Order progress</div><div class="progress">${steps.map((_, i) => `<span class="step ${i <= current ? 'on' : ''}"></span>`).join('')}</div>`;
+      }
+      function render() {
+        const q = searchRef.value.trim().toLowerCase(),
+          f = filterRef.value;
+        let list = [...allOrders];
+        document.getElementById('totalOrders').textContent = allOrders.length;
+        document.getElementById('activeOrders').textContent = allOrders.filter(
+          (o) => !['Delivered', 'Cancelled'].includes(o.status)
+        ).length;
+        document.getElementById('deliveredOrders').textContent =
+          allOrders.filter((o) => o.status === 'Delivered').length;
+        if (q)
+          list = list.filter(
+            (o) =>
+              String(o.oid).includes(q) ||
+              o.products.some((p) => `${p.name}`.toLowerCase().includes(q))
+          );
+        if (f !== 'all') list = list.filter((o) => o.status === f);
+        ordersRef.innerHTML = '';
+        if (!list.length) {
+          ordersRef.innerHTML =
+            '<div class="empty">No matching orders found.</div>';
+          return;
+        }
+        list.forEach((o) => {
+          const products = o.products
+            .map(
+              (p) =>
+                `<div class="product"><span>${p.name} × ${p.quantity}</span><span>₹${(Number(p.price) * Number(p.quantity)).toFixed(2)}</span></div>`
+            )
+            .join('');
+          const canCancel = ['Placed', 'Processing'].includes(o.status);
+          ordersRef.innerHTML += `<div class="order"><div class="order-top"><div class="order-id">Order #${o.oid}</div><div class="status ${o.status === 'Cancelled' ? 'cancelled' : ''}">${o.status}</div></div>${progress(o.status)}<div class="products">${products}</div><div class="order-info"><span>${new Date(o.created_at).toLocaleString()}</span><span class="total">Total: ₹${Number(o.total).toFixed(2)}</span>${canCancel ? `<button class="cancel" onclick="cancelOrder(${o.oid})">Cancel Order</button>` : ''}</div></div>`;
+        });
+      }
+      async function getOrders() {
+        try {
+          const r = await fetch(
+              `http://localhost:3000/order/view?username=${encodeURIComponent(username)}`
+            ),
+            d = await r.json(),
+            map = {};
+          (d.data || []).forEach((i) => {
+            if (!map[i.oid])
+              map[i.oid] = {
+                oid: i.oid,
+                total: i.total,
+                status: i.status,
+                created_at: i.created_at,
+                products: [],
+              };
+            map[i.oid].products.push(i);
+          });
+          allOrders = Object.values(map);
+          render();
+        } catch (e) {
+          ordersRef.innerHTML =
+            '<div class="empty">Unable to load orders</div>';
+        }
+      }
+      async function cancelOrder(oid) {
+        if (!confirm(`Cancel order #${oid}?`)) return;
+        try {
+          const r = await fetch(`http://localhost:3000/order/cancel/${oid}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username }),
+            }),
+            d = await r.json();
+          toast(d.message);
+          if (!d.error) getOrders();
+        } catch (e) {
+          toast('Unable to cancel order');
+        }
+      }
+      searchRef.addEventListener('input', render);
+      filterRef.addEventListener('change', render);
+      getOrders();
+    </script>
+  </body>
+</html>

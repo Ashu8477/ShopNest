@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>ShopNest - Customer Orders</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      main {
+        max-width: 980px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+      .head {
+        margin-bottom: 20px;
+      }
+      .head h2 {
+        font-size: 25px;
+      }
+      .sub {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 5px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+      }
+      .stat small {
+        color: #64748b;
+        font-size: 12px;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .stat strong {
+        font-size: 22px;
+      }
+      .order {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 19px;
+        margin-bottom: 15px;
+      }
+      .order-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .order-id {
+        font-weight: bold;
+        font-size: 17px;
+      }
+      .customer {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 5px;
+      }
+      .status {
+        padding: 6px 10px;
+        border-radius: 20px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .products {
+        border-top: 1px solid #eef2f7;
+        border-bottom: 1px solid #eef2f7;
+        padding: 10px 0;
+        margin-bottom: 14px;
+      }
+      .product {
+        display: flex;
+        justify-content: space-between;
+        padding: 7px 0;
+        font-size: 14px;
+        color: #475569;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .total {
+        font-weight: bold;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .controls select {
+        padding: 7px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+      }
+      .controls button {
+        padding: 7px 11px;
+        border: 0;
+        border-radius: 6px;
+        background: #172554;
+        color: #fff;
+        cursor: pointer;
+      }
+      .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .filters input,
+      .filters select {
+        padding: 9px 11px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+      }
+      .filters input {
+        flex: 1;
+      }
+      .empty {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 45px;
+        text-align: center;
+        color: #64748b;
+      }
+      @media (max-width: 650px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .order-head,
+        .footer {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .controls {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="head">
+        <h2>Customer Orders</h2>
+        <div class="sub">
+          Review orders containing your products and update their status.
+        </div>
+      </div>
+      <div class="filters">
+        <input
+          id="orderSearch"
+          placeholder="Search by order or customer..."
+        /><select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option>Placed</option>
+          <option>Processing</option>
+          <option>Shipped</option>
+          <option>Delivered</option>
+        </select>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <small>Total Orders</small><strong id="orderCount">0</strong>
+        </div>
+        <div class="stat">
+          <small>Processing</small><strong id="processingCount">0</strong>
+        </div>
+        <div class="stat">
+          <small>Delivered</small><strong id="deliveredCount">0</strong>
+        </div>
+        <div class="stat">
+          <small>Order Value</small><strong id="revenue">₹0</strong>
+        </div>
+      </div>
+      <div id="orders"></div>
+    </main>
+    <script src="navbar.js"></script>
+    <script>
+      const ordersRef = document.getElementById('orders'),
+        searchRef = document.getElementById('orderSearch'),
+        filterRef = document.getElementById('statusFilter'),
+        username = localStorage.getItem('username'),
+        token = localStorage.getItem('token'),
+        role = localStorage.getItem('role');
+      if (!token || role !== 'vendor') location.href = 'login.html';
+      async function getOrders() {
+        try {
+          const r = await fetch(
+              `http://localhost:3000/vendor/orders?username=${encodeURIComponent(username)}`
+            ),
+            d = await r.json();
+          const rows = d.data || [],
+            orders = {};
+          rows.forEach((i) => {
+            if (!orders[i.oid])
+              orders[i.oid] = {
+                oid: i.oid,
+                username: i.username,
+                total: i.total,
+                status: i.status,
+                products: [],
+              };
+            orders[i.oid].products.push(i);
+          });
+          let list = Object.values(orders);
+          const q = searchRef.value.trim().toLowerCase();
+          if (q)
+            list = list.filter(
+              (o) =>
+                String(o.oid).includes(q) ||
+                String(o.username).toLowerCase().includes(q)
+            );
+          if (filterRef.value !== 'all')
+            list = list.filter((o) => o.status === filterRef.value);
+          document.getElementById('orderCount').textContent = list.length;
+          document.getElementById('processingCount').textContent = list.filter(
+            (o) => o.status === 'Processing'
+          ).length;
+          document.getElementById('deliveredCount').textContent = list.filter(
+            (o) => o.status === 'Delivered'
+          ).length;
+          document.getElementById('revenue').textContent =
+            '₹' +
+            list.reduce((sum, o) => sum + Number(o.total || 0), 0).toFixed(0);
+          ordersRef.innerHTML = '';
+          if (!list.length) {
+            ordersRef.innerHTML =
+              '<div class="empty">No customer orders found</div>';
+            return;
+          }
+          list.forEach((o) => {
+            let products = '';
+            o.products.forEach(
+              (p) =>
+                (products += `<div class="product"><span>${p.name} × ${p.quantity}</span><span>₹${(Number(p.price) * Number(p.quantity)).toFixed(2)}</span></div>`)
+            );
+            ordersRef.innerHTML += `<div class="order"><div class="order-head"><div><div class="order-id">Order #${o.oid}</div><div class="customer">Customer: ${o.username}</div></div><span class="status">${o.status}</span></div><div class="products">${products}</div><div class="footer"><div class="total">Total: ₹${Number(o.total).toFixed(2)}</div><div class="controls"><select id="status-${o.oid}"><option ${o.status === 'Placed' ? 'selected' : ''}>Placed</option><option ${o.status === 'Processing' ? 'selected' : ''}>Processing</option><option ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option><option ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option></select><button onclick="updateStatus(${o.oid})">Update</button></div></div></div>`;
+          });
+        } catch (e) {
+          ordersRef.innerHTML =
+            '<div class="empty">Unable to load customer orders</div>';
+        }
+      }
+      async function updateStatus(oid) {
+        const status = document.getElementById(`status-${oid}`).value;
+        try {
+          const r = await fetch(`http://localhost:3000/order/status/${oid}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status }),
+            }),
+            d = await r.json();
+          if (!d.error) getOrders();
+          else alert(d.message);
+        } catch (e) {
+          alert('Unable to update order status');
+        }
+      }
+      searchRef.addEventListener('input', getOrders);
+      filterRef.addEventListener('change', getOrders);
+      getOrders();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>ShopNest - Product Details</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      main {
+        max-width: 1000px;
+        margin: 34px auto;
+        padding: 0 20px;
+      }
+      .back {
+        display: inline-block;
+        color: #475569;
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 18px;
+      }
+      .product {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .product img {
+        width: 100%;
+        height: 430px;
+        object-fit: cover;
+      }
+      .info {
+        padding: 34px;
+      }
+      .category {
+        color: #64748b;
+        text-transform: capitalize;
+        font-size: 13px;
+        margin-bottom: 9px;
+      }
+      .name {
+        font-size: 30px;
+        margin-bottom: 10px;
+      }
+      .rating {
+        color: #b45309;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .price {
+        font-size: 25px;
+        font-weight: bold;
+        color: #0f766e;
+        margin-bottom: 15px;
+      }
+      .detail {
+        color: #64748b;
+        line-height: 1.7;
+        font-size: 14px;
+        min-height: 70px;
+      }
+      .meta {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .pill {
+        background: #ecfdf5;
+        color: #047857;
+        border-radius: 14px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+      .actions button {
+        padding: 11px 15px;
+        border-radius: 7px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        cursor: pointer;
+      }
+      .actions .primary {
+        background: #172554;
+        color: white;
+        border-color: #172554;
+      }
+      .actions .wish.active {
+        background: #fff7ed;
+        color: #b45309;
+        border-color: #f59e0b;
+      }
+      .related {
+        margin-top: 24px;
+      }
+      .related h2 {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+      .related-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .related-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        text-decoration: none;
+        color: #172033;
+      }
+      .related-card img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+      }
+      .related-card div {
+        padding: 11px;
+      }
+      .related-card strong {
+        font-size: 13px;
+      }
+      .related-card small {
+        display: block;
+        color: #0f766e;
+        margin-top: 6px;
+      }
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        background: #172033;
+        color: white;
+        padding: 11px 15px;
+        border-radius: 7px;
+        display: none;
+        font-size: 13px;
+      }
+      @media (max-width: 720px) {
+        .product {
+          grid-template-columns: 1fr;
+        }
+        .product img {
+          height: 300px;
+        }
+        .info {
+          padding: 24px;
+        }
+        .name {
+          font-size: 25px;
+        }
+        .related-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="view_product.html">← Back to products</a>
+      <div id="product">
+        <div style="padding: 40px; background: #fff; border-radius: 12px">
+          Loading product...
+        </div>
+      </div>
+      <section id="related" class="related" style="display: none">
+        <h2>You may also like</h2>
+        <div id="relatedGrid" class="related-grid"></div>
+      </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script src="navbar.js"></script>
+    <script src="product_images.js"></script>
+    <script src="wishlist.js"></script>
+    <script>
+      const pid = new URLSearchParams(location.search).get('pid');
+      const auth = window.shopNestAuth || {};
+      function categoryOf(p) {
+        const n = (p.name || '').toLowerCase();
+        if (/lamp|stand|backpack/.test(n)) return 'home';
+        if (
+          /mouse|keyboard|hub|webcam|headphones|speaker|watch|power bank/.test(
+            n
+          )
+        )
+          return 'electronics';
+        return 'accessories';
+      }
+      function ratingOf(p) {
+        return (4.2 + (Number(p.pid || 1) % 5) * 0.1).toFixed(1);
+      }
+      function rememberViewed(id) {
+        let ids = [];
+        try {
+          ids = JSON.parse(localStorage.getItem('shopNestViewed') || '[]');
+        } catch (e) {}
+        ids = [
+          Number(id),
+          ...ids.filter((x) => Number(x) !== Number(id)),
+        ].slice(0, 6);
+        localStorage.setItem('shopNestViewed', JSON.stringify(ids));
+      }
+      function toast(t) {
+        const x = document.getElementById('toast');
+        x.textContent = t;
+        x.style.display = 'block';
+        setTimeout(() => (x.style.display = 'none'), 1500);
+      }
+      async function loadRelated(current) {
+        try {
+          const r = await fetch('http://localhost:3000/product/view');
+          const d = await r.json();
+          const list = (d.data || [])
+            .filter(
+              (p) =>
+                Number(p.pid) !== Number(current.pid) &&
+                categoryOf(p) === categoryOf(current)
+            )
+            .slice(0, 3);
+          if (!list.length) return;
+          document.getElementById('related').style.display = 'block';
+          document.getElementById('relatedGrid').innerHTML = list
+            .map(
+              (p) =>
+                `<a class="related-card" href="product_details.html?pid=${p.pid}"><img src="${getProductImage(p)}" alt="${p.name}"><div><strong>${p.name}</strong><small>₹${Number(p.price).toFixed(0)}</small></div></a>`
+            )
+            .join('');
+        } catch (e) {}
+      }
+      async function load() {
+        if (!pid) {
+          document.getElementById('product').innerHTML =
+            '<div style="padding:40px;background:#fff">Product not found.</div>';
+          return;
+        }
+        try {
+          const r = await fetch(`http://localhost:3000/product/${pid}`);
+          const d = await r.json();
+          if (d.error) throw Error();
+          const p = d.data;
+          rememberViewed(p.pid);
+          const wish =
+            typeof isWishlisted === 'function' && isWishlisted(p.pid);
+          document.getElementById('product').innerHTML =
+            `<div class="product"><img src="${getProductImage(p)}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=900&q=80'"><div class="info"><div class="category">${categoryOf(p)}</div><h1 class="name">${p.name}</h1><div class="rating">★ ${ratingOf(p)} · Available</div><div class="price">₹${Number(p.price).toFixed(2)}</div><p class="detail">${p.detail}</p><div class="meta"><span class="pill">In stock</span><span class="pill">Free delivery over ₹999</span></div><div class="actions">${auth.role === 'customer' ? `<button class="primary" onclick="addCart(${p.pid})">Add to Cart</button><button class="wish ${wish ? 'active' : ''}" onclick="toggleWish(${p.pid})">${wish ? '♥ Wishlisted' : '♡ Wishlist'}</button>` : ''}<button onclick="history.back()">Back</button></div></div></div>`;
+          loadRelated(p);
+        } catch (e) {
+          document.getElementById('product').innerHTML =
+            '<div style="padding:40px;background:#fff;border-radius:12px">Unable to load product.</div>';
+        }
+      }
+      async function addCart(id) {
+        try {
+          const r = await fetch('http://localhost:3000/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: auth.username,
+              pid: id,
+              quantity: 1,
+            }),
+          });
+          const d = await r.json();
+          toast(d.error ? d.message : 'Product added to cart');
+        } catch (e) {
+          toast('Unable to add product');
+        }
+      }
+      function toggleWish(id) {
+        const added = toggleWishlist({ pid: id });
+        toast(added ? 'Added to wishlist' : 'Removed from wishlist');
+        load();
+      }
+      load();
+    </script>
+  </body>
+</html>

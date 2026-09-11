@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopNest - Edit Product</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+      }
+
+      main {
+        width: 420px;
+        max-width: calc(100% - 30px);
+        margin: 40px auto;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 28px;
+      }
+
+      h2 {
+        margin-bottom: 25px;
+      }
+
+      .field {
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 14px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+      }
+
+      textarea {
+        height: 100px;
+        resize: vertical;
+      }
+
+      button {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 5px;
+        background: #222;
+        color: white;
+        cursor: pointer;
+        font-size: 15px;
+      }
+
+      .message {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <h2>Edit Product</h2>
+
+      <form id="productForm">
+        <div class="field">
+          <label for="name">Product Name</label>
+          <input type="text" id="name" required />
+        </div>
+
+        <div class="field">
+          <label for="price">Price</label>
+          <input type="number" id="price" min="1" required />
+        </div>
+
+        <div class="field">
+          <label for="detail">Description</label>
+          <textarea id="detail" required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="image">Product Image URL</label>
+          <input type="url" id="image" placeholder="https://...">
+          <img id="preview" style="display:none;width:100%;height:160px;object-fit:cover;border-radius:7px;margin-top:10px;border:1px solid #e2e8f0" alt="Product preview">
+        </div>
+
+        <button type="submit">Update Product</button>
+
+        <div id="message" class="message"></div>
+      </form>
+    </main>
+
+    <script src="navbar.js"></script>
+
+    <script>
+      if (!token || role !== 'vendor') {
+        window.location.href = 'login.html';
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const pid = params.get('pid');
+
+      const nameRef = document.getElementById('name');
+      const priceRef = document.getElementById('price');
+      const detailRef = document.getElementById('detail');
+      const imageRef = document.getElementById('image');
+      const previewRef = document.getElementById('preview');
+      const productForm = document.getElementById('productForm');
+      const messageRef = document.getElementById('message');
+
+      async function getProduct() {
+        try {
+          const response = await fetch('http://localhost:3000/product/view');
+
+          const result = await response.json();
+
+          const product = result.data.find((item) => item.pid == pid);
+
+          if (!product) {
+            messageRef.textContent = 'Product not found';
+            messageRef.style.color = 'red';
+            return;
+          }
+
+          nameRef.value = product.name;
+          priceRef.value = product.price;
+          detailRef.value = product.detail;
+          imageRef.value = product.image || '';
+          if (product.image) { previewRef.src = product.image; previewRef.style.display = 'block'; }
+        } catch (error) {
+          messageRef.textContent = 'Unable to load product';
+          messageRef.style.color = 'red';
+        }
+      }
+
+      imageRef.addEventListener('input', () => {
+        if (imageRef.value.trim()) {
+          previewRef.src = imageRef.value.trim();
+          previewRef.style.display = 'block';
+        } else {
+          previewRef.style.display = 'none';
+        }
+      });
+
+      productForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        try {
+          const response = await fetch(
+            `http://localhost:3000/product/edit/${pid}`,
+            {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: nameRef.value.trim(),
+                price: priceRef.value,
+                detail: detailRef.value.trim(),
+                image: imageRef.value.trim(),
+                owner: username,
+              }),
+            }
+          );
+
+          const result = await response.json();
+
+          if (!result.error) {
+            messageRef.textContent = 'Product updated successfully';
+            messageRef.style.color = 'green';
+
+            setTimeout(() => {
+              window.location.href = 'vendor_products.html';
+            }, 700);
+          } else {
+            messageRef.textContent = result.message;
+            messageRef.style.color = 'red';
+          }
+        } catch (error) {
+          messageRef.textContent = 'Unable to update product';
+          messageRef.style.color = 'red';
+        }
+      });
+
+      getProduct();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopNest - Home</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      .hero {
+        max-width: 1120px;
+        margin: 38px auto 30px;
+        padding: 0 20px;
+      }
+      .hero-box {
+        min-height: 310px;
+        padding: 48px;
+        border-radius: 18px;
+        background: linear-gradient(120deg, #172554, #334155);
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-box:after {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        right: -80px;
+        top: -100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .hero h1 {
+        max-width: 650px;
+        font-size: 42px;
+        line-height: 1.12;
+        margin-bottom: 15px;
+      }
+      .hero p {
+        max-width: 620px;
+        color: #dbeafe;
+        line-height: 1.7;
+        margin-bottom: 25px;
+      }
+      .hero a {
+        display: inline-block;
+        padding: 11px 17px;
+        border-radius: 7px;
+        text-decoration: none;
+        font-size: 14px;
+        margin-right: 8px;
+      }
+      .primary {
+        background: #f59e0b;
+        color: #172033;
+        font-weight: bold;
+      }
+      .secondary {
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        color: white;
+      }
+      .section {
+        max-width: 1120px;
+        margin: 0 auto 45px;
+        padding: 0 20px;
+      }
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .section h2 {
+        font-size: 24px;
+      }
+      .section-head a {
+        color: #334155;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      #featured {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: 0.2s;
+      }
+      .card {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      }
+      .product-image {
+        width: 100%;
+        height: 165px;
+        object-fit: cover;
+        display: block;
+      }
+      .card-body {
+        padding: 16px;
+      }
+      .card h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .price {
+        color: #0f766e;
+        font-size: 17px;
+        font-weight: bold;
+        margin-bottom: 7px;
+      }
+      .detail {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .recent {
+        display: none;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        margin-top: 18px;
+      }
+      .recent h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      .recent-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eef2f7;
+        font-size: 13px;
+      }
+      .recent-row:last-child {
+        border-bottom: 0;
+      }
+      .recent-status {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: #eef2ff;
+        color: #334155;
+      }
+      .empty {
+        color: #64748b;
+        padding: 30px 0;
+      }
+      .categories {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+      }
+      .categories a {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        padding: 18px;
+        text-decoration: none;
+        color: #172033;
+      }
+      .categories span {
+        display: block;
+        font-size: 23px;
+        color: #f59e0b;
+        margin-bottom: 10px;
+      }
+      .categories b {
+        display: block;
+        font-size: 15px;
+      }
+      .categories small {
+        display: block;
+        color: #64748b;
+        margin-top: 5px;
+        font-size: 12px;
+      }
+      @media (max-width: 850px) {
+        #featured {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .categories {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 520px) {
+        .hero-box {
+          padding: 32px 25px;
+        }
+        .hero h1 {
+          font-size: 31px;
+        }
+        #featured {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="hero-box">
+        <h1>Find something useful for every day.</h1>
+        <p>
+          Shop products from trusted vendors, keep your cart ready, and track
+          your orders from one simple place.
+        </p>
+        <div id="heroButtons">
+          <a href="login.html" class="primary">Start Shopping</a>
+          <a href="signup.html" class="secondary">Create Account</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section categories-section">
+      <div class="section-head"><h2>Shop by category</h2></div>
+      <div class="categories">
+        <a href="view_product.html?category=electronics"
+          ><span>⚡</span><b>Electronics</b><small>Gadgets & devices</small></a
+        >
+        <a href="view_product.html?category=home"
+          ><span>⌂</span><b>Home & Study</b
+          ><small>Useful everyday items</small></a
+        >
+        <a href="view_product.html?category=accessories"
+          ><span>◈</span><b>Accessories</b
+          ><small>Small things, big help</small></a
+        >
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Featured Products</h2>
+        <a href="view_product.html">View all →</a>
+      </div>
+      <div id="featured"><div class="empty">Loading products...</div></div>
+      <div id="recent" class="recent"></div>
+    </section>
+
+    <script src="navbar.js"></script>
+    <script src="product_images.js"></script>
+    <script>
+      const { token, username, role } = window.shopNestAuth || {
+        token: null,
+        username: null,
+        role: null,
+      };
+      const heroButtons = document.getElementById('heroButtons');
+
+      if (token) {
+        heroButtons.innerHTML =
+          role === 'vendor'
+            ? '<a href="vendor_products.html" class="primary">Manage Products</a><a href="vendor_orders.html" class="secondary">Customer Orders</a>'
+            : '<a href="view_product.html" class="primary">Start Shopping</a><a href="cart.html" class="secondary">View Cart</a>';
+      }
+
+      async function loadFeaturedProducts() {
+        const featured = document.getElementById('featured');
+
+        try {
+          const response = await fetch('http://localhost:3000/product/view');
+          const result = await response.json();
+
+          if (result.error || !result.data || result.data.length === 0) {
+            featured.innerHTML =
+              '<div class="empty">No products available yet.</div>';
+            return;
+          }
+
+          featured.innerHTML = '';
+
+          result.data.slice(0, 4).forEach((product) => {
+            featured.innerHTML += `
+            <a class="card" href="product_details.html?pid=${product.pid}">
+              <img class="product-image" src="${getProductImage(product)}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=80'">
+              <div class="card-body">
+                <h3>${product.name}</h3>
+                <div class="price">₹${product.price}</div>
+                <div class="detail">${product.detail}</div>
+              </div>
+            </a>
+          `;
+          });
+        } catch (error) {
+          featured.innerHTML =
+            '<div class="empty">Unable to load products.</div>';
+        }
+      }
+
+      async function loadRecent() {
+        if (!token || role !== 'customer') return;
+        try {
+          const r = await fetch(
+            `http://localhost:3000/order/view?username=${encodeURIComponent(username)}`
+          );
+          const d = await r.json();
+          const rows = d.data || [];
+          const grouped = [];
+          rows.forEach((x) => {
+            if (!grouped.find((o) => o.oid === x.oid))
+              grouped.push({ oid: x.oid, total: x.total, status: x.status });
+          });
+          const recent = document.getElementById('recent');
+          if (!grouped.length) return;
+          recent.style.display = 'block';
+          recent.innerHTML =
+            '<h3>Recent Orders</h3>' +
+            grouped
+              .slice(0, 3)
+              .map(
+                (o) =>
+                  `<div class="recent-row"><span>Order #${o.oid} · ₹${Number(o.total).toFixed(0)}</span><span class="recent-status">${o.status}</span></div>`
+              )
+              .join('');
+        } catch (e) {}
+      }
+      loadFeaturedProducts();
+      loadRecent();
+    </script>
+  </body>
+</html>
